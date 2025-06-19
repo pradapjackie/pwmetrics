@@ -18,38 +18,35 @@ jobs:
       - name: 📦 Install pwmetrics
         run: npm install -g pwmetrics
 
-      - name: 🐳 Start Chrome with remote debugging
+      - name: 🐳 Start Chrome container with remote debugging
         run: |
           docker run -d \
             --name chrome-debug \
             -p 9222:9222 \
             --shm-size=2gb \
-            ghcr.io/browserless/chrome:latest \
-            chrome \
-            --headless=new \
-            --no-sandbox \
-            --disable-gpu \
-            --remote-debugging-address=0.0.0.0 \
-            --remote-debugging-port=9222 \
-            about:blank
+            ghcr.io/browserless/chrome:latest
 
-          echo "🕒 Waiting for Chrome..."
-          sleep 10
+          echo "🕒 Waiting for Chrome to be ready..."
+          for i in {1..10}; do
+            if curl -s http://localhost:9222/json/version; then
+              echo "✅ Chrome is ready"
+              break
+            fi
+            echo "⏳ Waiting..."
+            sleep 2
+          done
 
-      - name: 🧪 Confirm Chrome is ready
-        run: curl http://localhost:9222/json/version
-
-      - name: 📊 Run pwmetrics on playwright.com
+      - name: 📊 Run pwmetrics against Playwright.com
         run: |
           pwmetrics https://playwright.com \
             --json \
             --port=9222 > performance-results.json
 
-      - name: 📤 Upload results
+      - name: 📤 Upload performance results
         uses: actions/upload-artifact@v4
         with:
           name: pwmetrics-results
           path: performance-results.json
 
-      - name: 🧹 Stop and remove Chrome container
+      - name: 🧹 Stop Chrome container
         run: docker rm -f chrome-debug
