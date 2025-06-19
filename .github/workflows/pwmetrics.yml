@@ -17,23 +17,16 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 📦 Install pwmetrics and dependencies
-        run: |
-          npm install -g pwmetrics
+      - name: 📦 Install pwmetrics globally
+        run: npm install -g pwmetrics
 
-      - name: 🚀 Launch Chrome with debugging
+      - name: 🚀 Run pwmetrics on Playwright.com
         run: |
-          echo "Starting Chrome..."
-          nohup google-chrome --headless --no-sandbox --disable-gpu --remote-debugging-port=9222 about:blank > chrome.log 2>&1 &
-          sleep 10
+          CHROME_PATH=$(which google-chrome || which chromium-browser)
+          echo "Using Chrome: $CHROME_PATH"
+          PW_METRICS_CHROME_PATH="$CHROME_PATH" pwmetrics https://playwright.com --json > performance-results.json
 
-      - name: 🧪 Run pwmetrics test
-        run: |
-          echo "Running pwmetrics..."
-          pwmetrics https://playwright.com --json --port=9222 > performance-results.json
-        continue-on-error: true
-
-      - name: 📤 Upload results
+      - name: 📤 Upload pwmetrics results
         uses: actions/upload-artifact@v4
         with:
           name: pwmetrics-results
