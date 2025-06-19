@@ -1,8 +1,6 @@
 name: pwmetrics-performance-test
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -21,12 +19,24 @@ jobs:
       - name: 📦 Install pwmetrics
         run: npm install -g pwmetrics
 
-      - name: 🚀 Run pwmetrics on playwright.com
+      - name: 🚀 Start Chrome in background
+        run: |
+          export CHROME_PATH=$(which google-chrome)
+          nohup "$CHROME_PATH" \
+            --headless=new \
+            --remote-debugging-port=9222 \
+            --disable-gpu \
+            --no-sandbox \
+            --disable-dev-shm-usage \
+            about:blank > chrome.log 2>&1 &
+          sleep 5
+
+      - name: 🧪 Run pwmetrics on playwright.com
         run: |
           export CHROME_PATH=$(which google-chrome)
           pwmetrics https://playwright.com \
             --json \
-            --chrome-flags="--headless=new --no-sandbox --disable-gpu --remote-debugging-port=9222" \
+            --port=9222 \
             > performance-results.json
 
       - name: 📤 Upload pwmetrics result
