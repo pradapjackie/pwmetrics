@@ -13,35 +13,37 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v3
 
-      - name: 🔧 Install Node.js & pwmetrics
+      - name: 🔧 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: 🧪 Install pwmetrics
+      - name: 📦 Install pwmetrics
         run: npm install -g pwmetrics
 
-      - name: 🧪 Install Chrome
+      - name: 🧩 Install Chrome
         run: |
           sudo apt update
           sudo apt install -y wget gnupg unzip
           wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
           sudo apt update
           sudo apt install -y google-chrome-stable
 
-      - name: 🚀 Launch Chrome & Run pwmetrics
+      - name: 🚀 Launch headless Chrome
         run: |
           google-chrome-stable \
             --headless=new \
             --no-sandbox \
-            --disable-gpu \
             --remote-debugging-port=9222 \
-            --remote-debugging-address=0.0.0.0 &
+            --disable-gpu \
+            --disable-dev-shm-usage \
+            about:blank &
 
-          echo "Waiting for Chrome to be ready..."
+      - name: ⏳ Wait for Chrome to be ready
+        run: |
           for i in {1..10}; do
-            if curl -s http://localhost:9222/json/version > /dev/null; then
+            if curl -s http://localhost:9222/json/version | grep -q "Browser"; then
               echo "✅ Chrome is ready!"
               break
             fi
@@ -49,13 +51,14 @@ jobs:
             sleep 2
           done
 
-          echo "Running pwmetrics..."
+      - name: 🧪 Run pwmetrics on Playwright.com
+        run: |
           pwmetrics https://playwright.com \
             --json \
             --port=9222 \
             > performance-results.json
 
-      - name: 📤 Upload performance results
+      - name: 📤 Upload performance report
         uses: actions/upload-artifact@v4
         with:
           name: pwmetrics-results
