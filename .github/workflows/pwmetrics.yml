@@ -25,14 +25,25 @@ jobs:
         run: |
           echo "Launching Chrome..."
           /usr/bin/google-chrome \
-            --headless=new \
-            --no-sandbox \
+            --headless \
             --disable-gpu \
+            --no-sandbox \
             --remote-debugging-port=9222 \
+            --disable-dev-shm-usage \
+            --disable-background-networking \
+            --disable-default-apps \
+            --disable-extensions \
+            --disable-sync \
+            --metrics-recording-only \
+            --mute-audio \
             about:blank > chrome.log 2>&1 &
 
           echo "Waiting for Chrome to be ready..."
           sleep 10
+
+      - name: 🧪 Check Chrome remote debugging
+        run: |
+          curl http://localhost:9222/json/version || echo "Chrome not ready"
 
       - name: 📊 Run pwmetrics on playwright.com
         run: |
