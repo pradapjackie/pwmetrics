@@ -9,20 +9,29 @@ jobs:
   performance:
     runs-on: ubuntu-latest
 
-    container:
-      image: zenika/alpine-chrome:with-node
-      options: --shm-size=2g
-
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v3
 
-      - name: 🧰 Install pwmetrics
+      - name: 🔧 Install Node.js & pwmetrics
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🧪 Install pwmetrics
         run: npm install -g pwmetrics
 
-      - name: 🚀 Start Chrome & Run pwmetrics
+      - name: 🧪 Install Chrome
         run: |
-          echo "Launching headless Chrome..."
+          sudo apt update
+          sudo apt install -y wget gnupg unzip
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+          sudo apt update
+          sudo apt install -y google-chrome-stable
+
+      - name: 🚀 Launch Chrome & Run pwmetrics
+        run: |
           google-chrome-stable \
             --headless=new \
             --no-sandbox \
@@ -46,7 +55,7 @@ jobs:
             --port=9222 \
             > performance-results.json
 
-      - name: 📤 Upload results
+      - name: 📤 Upload performance results
         uses: actions/upload-artifact@v4
         with:
           name: pwmetrics-results
