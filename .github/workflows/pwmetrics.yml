@@ -18,12 +18,15 @@ jobs:
       - name: 📦 Install pwmetrics
         run: npm install -g pwmetrics
 
-      - name: 🐳 Launch Headless Chrome with Debug Port
+      - name: 🐳 Start Chrome with remote debugging
         run: |
           docker run -d \
-            --name chrome \
+            --name chrome-debug \
             -p 9222:9222 \
-            browserless/chrome:latest \
+            --shm-size=2gb \
+            ghcr.io/browserless/chrome:latest \
+            chrome \
+            --headless=new \
             --no-sandbox \
             --disable-gpu \
             --remote-debugging-address=0.0.0.0 \
@@ -33,10 +36,10 @@ jobs:
           echo "🕒 Waiting for Chrome..."
           sleep 10
 
-      - name: 🧪 Confirm Chrome is running
+      - name: 🧪 Confirm Chrome is ready
         run: curl http://localhost:9222/json/version
 
-      - name: 📊 Run pwmetrics
+      - name: 📊 Run pwmetrics on playwright.com
         run: |
           pwmetrics https://playwright.com \
             --json \
@@ -47,3 +50,6 @@ jobs:
         with:
           name: pwmetrics-results
           path: performance-results.json
+
+      - name: 🧹 Stop and remove Chrome container
+        run: docker rm -f chrome-debug
