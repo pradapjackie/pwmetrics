@@ -8,26 +8,26 @@ on:
 jobs:
   performance:
     runs-on: ubuntu-latest
+
+    container:
+      image: mcr.microsoft.com/playwright:v1.44.1-focal # or another image with Chrome + Node
+      options: --shm-size=2gb
+
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v3
 
-      - name: 🧰 Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-
       - name: 📦 Install pwmetrics
         run: npm install -g pwmetrics
 
-      - name: 🚀 Run pwmetrics on Playwright.com
+      - name: 🚀 Run pwmetrics on playwright.com
         run: |
           pwmetrics https://playwright.com \
             --json \
             --chrome-flags="--headless=new --no-sandbox --disable-gpu --remote-debugging-port=9222" \
             > performance-results.json
 
-      - name: 📤 Upload pwmetrics results
+      - name: 📤 Upload pwmetrics result
         uses: actions/upload-artifact@v4
         with:
           name: pwmetrics-results
