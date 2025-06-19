@@ -1,7 +1,9 @@
 name: pwmetrics-performance-test
-
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
+
 
 jobs:
   performance:
