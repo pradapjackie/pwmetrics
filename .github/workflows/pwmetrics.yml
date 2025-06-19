@@ -22,16 +22,19 @@ jobs:
           npm install -g pwmetrics
           npm install
 
-      - name: 🚀 Run pwmetrics on playwright.com
-        run: node run-perf.js
-
-      - name: 🗂️ Save output
+      - name: 🚀 Run pwmetrics on playwright.com and save output
         run: |
-          node run-perf.js > performance-results.txt
+          CHROME_PATH=$(which google-chrome || which chromium-browser || true)
+          echo "Detected Chrome path: $CHROME_PATH"
+          if [ -z "$CHROME_PATH" ]; then
+            echo "❌ Chrome is not available on the runner. Aborting."
+            exit 1
+          fi
+          CHROME_PATH=$CHROME_PATH pwmetrics https://playwright.com --json > performance-results.txt
         continue-on-error: true
 
       - name: 📤 Upload results as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: pwmetrics-results
           path: performance-results.txt
