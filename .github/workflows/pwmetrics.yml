@@ -26,21 +26,34 @@ jobs:
             --shm-size=2gb \
             ghcr.io/browserless/chrome:latest
 
+      - name: ⏱️ Wait for Chrome to become ready
+        run: |
           echo "🕒 Waiting for Chrome to be ready..."
-          for i in {1..10}; do
-            if curl -s http://localhost:9222/json/version; then
+          for i in {1..20}; do
+            if curl -s http://localhost:9222/json/version | grep -q "Browser"; then
               echo "✅ Chrome is ready"
-              break
+              exit 0
             fi
-            echo "⏳ Waiting..."
+            echo "⏳ Chrome not ready yet... ($i/20)"
             sleep 2
           done
+          echo "❌ Chrome did not start in time"
+          docker logs chrome-debug
+          exit 1
 
       - name: 📊 Run pwmetrics against Playwright.com
         run: |
           pwmetrics https://playwright.com \
             --json \
             --port=9222 > performance-results.json
+
+      - name: 📝 Validate output
+        run: |
+          cat performance-results.json
+          if ! grep -q '"metrics"' performance-results.json; then
+            echo "❌ No metrics found in pwmetrics result"
+            exit 1
+          fi
 
       - name: 📤 Upload performance results
         uses: actions/upload-artifact@v4
