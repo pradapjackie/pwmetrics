@@ -24,7 +24,7 @@ jobs:
         run: |
           CHROME_PATH=$(which google-chrome || which chromium-browser)
           echo "Using Chrome: $CHROME_PATH"
-          PW_METRICS_CHROME_PATH="$CHROME_PATH" pwmetrics https://playwright.com --json > performance-results.json
+          pwmetrics https://playwright.com --json --chrome-flags="--headless=new --no-sandbox --disable-gpu --remote-debugging-port=9222" > performance-results.json
 
       - name: 📤 Upload pwmetrics results
         uses: actions/upload-artifact@v4
