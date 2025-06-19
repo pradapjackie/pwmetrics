@@ -1,0 +1,15 @@
+{
+  "name": "pwmetrics",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "lighthouse": "lighthouse https://playwright.com --output html --output json --output-path ./lighthouse-report"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "pwmetrics": "^4.2.3"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "url": "https://playwright.com",
+  "numberOfRuns": 3,
+  "chromeFlags": ["--headless"],
+  "emulatedFormFactor": "desktop",
+  "flags": {
+    "onlyCategories": ["performance"]
+  }
+}
