@@ -22,19 +22,19 @@ jobs:
           npm install -g pwmetrics
           npm install
 
-      - name: 🚀 Run pwmetrics on playwright.com and save output
+      - name: 🚀 Launch Chrome manually in headless mode
         run: |
-          CHROME_PATH=$(which google-chrome || which chromium-browser || true)
-          echo "Detected Chrome path: $CHROME_PATH"
-          if [ -z "$CHROME_PATH" ]; then
-            echo "❌ Chrome is not available on the runner. Aborting."
-            exit 1
-          fi
-          CHROME_PATH=$CHROME_PATH pwmetrics https://playwright.com --json > performance-results.txt
+          google-chrome --headless --remote-debugging-port=9222 --no-sandbox --disable-gpu &
+
+      - name: 🧪 Run pwmetrics with Chrome debugging port
+        run: |
+          # Wait for Chrome to be ready
+          sleep 5
+          pwmetrics https://playwright.com --json --port=9222 > performance-results.json
         continue-on-error: true
 
-      - name: 📤 Upload results as artifact
+      - name: 📤 Upload results
         uses: actions/upload-artifact@v4
         with:
           name: pwmetrics-results
-          path: performance-results.txt
+          path: performance-results.json
