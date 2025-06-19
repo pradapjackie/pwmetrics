@@ -1,18 +1,15 @@
 name: pwmetrics-performance-test
+
 on:
+  workflow_dispatch:
   push:
     branches: [main]
-  workflow_dispatch:
-
 
 jobs:
   performance:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v3
-
       - name: 🧰 Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -21,36 +18,29 @@ jobs:
       - name: 📦 Install pwmetrics
         run: npm install -g pwmetrics
 
-      - name: 🚀 Launch Chrome with remote debugging
+      - name: 🐳 Launch Headless Chrome with Debug Port
         run: |
-          echo "Launching Chrome..."
-          /usr/bin/google-chrome \
-            --headless \
-            --disable-gpu \
+          docker run -d \
+            --name chrome \
+            -p 9222:9222 \
+            browserless/chrome:latest \
             --no-sandbox \
+            --disable-gpu \
+            --remote-debugging-address=0.0.0.0 \
             --remote-debugging-port=9222 \
-            --disable-dev-shm-usage \
-            --disable-background-networking \
-            --disable-default-apps \
-            --disable-extensions \
-            --disable-sync \
-            --metrics-recording-only \
-            --mute-audio \
-            about:blank > chrome.log 2>&1 &
+            about:blank
 
-          echo "Waiting for Chrome to be ready..."
+          echo "🕒 Waiting for Chrome..."
           sleep 10
 
-      - name: 🧪 Check Chrome remote debugging
-        run: |
-          curl http://localhost:9222/json/version || echo "Chrome not ready"
+      - name: 🧪 Confirm Chrome is running
+        run: curl http://localhost:9222/json/version
 
-      - name: 📊 Run pwmetrics on playwright.com
+      - name: 📊 Run pwmetrics
         run: |
           pwmetrics https://playwright.com \
             --json \
-            --port=9222 \
-            > performance-results.json
+            --port=9222 > performance-results.json
 
       - name: 📤 Upload results
         uses: actions/upload-artifact@v4
