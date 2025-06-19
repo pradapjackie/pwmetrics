@@ -17,19 +17,19 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 📦 Install dependencies
+      - name: 📦 Install pwmetrics and dependencies
         run: |
           npm install -g pwmetrics
-          npm install
 
-      - name: 🚀 Launch Chrome manually in headless mode
+      - name: 🚀 Launch Chrome with debugging
         run: |
-          google-chrome --headless --remote-debugging-port=9222 --no-sandbox --disable-gpu &
+          echo "Starting Chrome..."
+          nohup google-chrome --headless --no-sandbox --disable-gpu --remote-debugging-port=9222 about:blank > chrome.log 2>&1 &
+          sleep 10
 
-      - name: 🧪 Run pwmetrics with Chrome debugging port
+      - name: 🧪 Run pwmetrics test
         run: |
-          # Wait for Chrome to be ready
-          sleep 5
+          echo "Running pwmetrics..."
           pwmetrics https://playwright.com --json --port=9222 > performance-results.json
         continue-on-error: true
 
